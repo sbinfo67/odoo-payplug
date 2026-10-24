@@ -83,10 +83,12 @@ Configuration
 
 **Clés Payplug**
 
-1. Dans le portail Payplug, à la rubrique des clés d'API, copiez la clé
-   secrète de test (``sk_test_...``) et, plus tard, la clé secrète de
-   production (``sk_live_...``). La clé publique n'est pas utilisée : le
-   module ne passe que par la page de paiement hébergée.
+1. Dans le portail Payplug, à la rubrique des clés d'API, générez une
+   clé de type **API Key** (clé secrète) en environnement **Test** et,
+   plus tard, une clé en environnement **Live**. Les clés actuelles sont
+   des jetons JWT (``eyJ...``) ; les anciennes clés ``sk_test_...`` et
+   ``sk_live_...`` sont aussi acceptées. La clé publique n'est pas
+   utilisée : le module ne passe que par la page de paiement hébergée.
 
 2. Dans Odoo, ouvrez *Facturation (ou Comptabilité) > Configuration >
    Fournisseurs de paiement* et choisissez **Payplug**.
@@ -96,11 +98,14 @@ Configuration
 
 4. Réglez l'état :
 
-   - **Mode test** avec une clé ``sk_test_...`` : aucun débit réel ;
-   - **Activé** avec une clé ``sk_live_...`` : paiements réels.
+   - **Mode test** avec une clé de l'environnement Test : aucun débit
+     réel ;
+   - **Activé** avec une clé de l'environnement Live : paiements réels.
 
-   Odoo refuse une clé de production en mode test, et une clé de test
-   sur un fournisseur activé.
+   Pour une ancienne clé ``sk_...``, Odoo refuse une clé de production
+   en mode test et une clé de test sur un fournisseur activé. Pour une
+   clé JWT, l'accord entre le mode et la clé est vérifié à chaque
+   paiement : un paiement dont le mode ne correspond pas est refusé.
 
 5. Dans l'onglet *Configuration*, vérifiez le journal de paiement et les
    moyens de paiement. Par défaut, seul *Carte* (CB, Visa, Mastercard)

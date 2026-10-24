@@ -147,8 +147,8 @@ msgstr ""
 #. module: payment_payplug
 #: model:ir.model.fields,help:payment_payplug.field_payment_provider__payplug_secret_key
 msgid ""
-"The secret key of your Payplug account: a test key (sk_test_...) in test "
-"mode, a live key (sk_live_...) when the provider is enabled."
+"The secret key of your Payplug account: a key of the Test environment in "
+"test mode, a key of the Live environment when the provider is enabled."
 msgstr ""
 
 #. module: payment_payplug

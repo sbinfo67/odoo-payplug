@@ -441,10 +441,12 @@ est supprimé.</p>
 <h2><a class="toc-backref" href="#toc-entry-2">Configuration</a></h2>
 <p><strong>Clés Payplug</strong></p>
 <ol class="arabic">
-<li><p class="first">Dans le portail Payplug, à la rubrique des clés d’API, copiez la clé
-secrète de test (<tt class="docutils literal"><span class="pre">sk_test_...</span></tt>) et, plus tard, la clé secrète de
-production (<tt class="docutils literal"><span class="pre">sk_live_...</span></tt>). La clé publique n’est pas utilisée : le
-module ne passe que par la page de paiement hébergée.</p>
+<li><p class="first">Dans le portail Payplug, à la rubrique des clés d’API, générez une
+clé de type <strong>API Key</strong> (clé secrète) en environnement <strong>Test</strong> et,
+plus tard, une clé en environnement <strong>Live</strong>. Les clés actuelles sont
+des jetons JWT (<tt class="docutils literal"><span class="pre">eyJ...</span></tt>) ; les anciennes clés <tt class="docutils literal"><span class="pre">sk_test_...</span></tt> et
+<tt class="docutils literal"><span class="pre">sk_live_...</span></tt> sont aussi acceptées. La clé publique n’est pas
+utilisée : le module ne passe que par la page de paiement hébergée.</p>
 </li>
 <li><p class="first">Dans Odoo, ouvrez <em>Facturation (ou Comptabilité) &gt; Configuration &gt;
 Fournisseurs de paiement</em> et choisissez <strong>Payplug</strong>.</p>
@@ -454,11 +456,14 @@ administrateurs (groupe <em>Paramètres</em>) peuvent la lire ou la modifier.</p
 </li>
 <li><p class="first">Réglez l’état :</p>
 <ul class="simple">
-<li><strong>Mode test</strong> avec une clé <tt class="docutils literal"><span class="pre">sk_test_...</span></tt> : aucun débit réel ;</li>
-<li><strong>Activé</strong> avec une clé <tt class="docutils literal"><span class="pre">sk_live_...</span></tt> : paiements réels.</li>
+<li><strong>Mode test</strong> avec une clé de l’environnement Test : aucun débit
+réel ;</li>
+<li><strong>Activé</strong> avec une clé de l’environnement Live : paiements réels.</li>
 </ul>
-<p>Odoo refuse une clé de production en mode test, et une clé de test
-sur un fournisseur activé.</p>
+<p>Pour une ancienne clé <tt class="docutils literal"><span class="pre">sk_...</span></tt>, Odoo refuse une clé de production
+en mode test et une clé de test sur un fournisseur activé. Pour une
+clé JWT, l’accord entre le mode et la clé est vérifié à chaque
+paiement : un paiement dont le mode ne correspond pas est refusé.</p>
 </li>
 <li><p class="first">Dans l’onglet <em>Configuration</em>, vérifiez le journal de paiement et les
 moyens de paiement. Par défaut, seul <em>Carte</em> (CB, Visa, Mastercard)

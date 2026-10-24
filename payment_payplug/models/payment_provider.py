@@ -20,8 +20,8 @@ class PaymentProvider(models.Model):
         ondelete={"payplug": "set default"},
     )
     payplug_secret_key = fields.Char(
-        help="The secret key of your Payplug account: a test key (sk_test_...) in "
-        "test mode, a live key (sk_live_...) when the provider is enabled.",
+        help="The secret key of your Payplug account: a key of the Test environment "
+        "in test mode, a key of the Live environment when the provider is enabled.",
         required_if_provider="payplug",
         copy=False,
         groups="base.group_system",
@@ -64,6 +64,10 @@ class PaymentProvider(models.Model):
             and p.payplug_secret_key
         ):
             key = provider.payplug_secret_key.strip()
+            if not key.startswith("sk_"):
+                # Keys issued by the current Payplug portal are JWTs without a mode
+                # prefix; the mode is then checked on every payment (`is_live`).
+                continue
             if provider.state == "test" and not key.startswith(
                 const.SECRET_KEY_PREFIX_TEST
             ):
