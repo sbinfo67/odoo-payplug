@@ -1,0 +1,185 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* payment_payplug
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0-20260817\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-24 15:58+0000\n"
+"PO-Revision-Date: 2026-10-24 15:58+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: payment_payplug
+#: model_terms:ir.ui.view,arch_db:payment_payplug.payment_transaction_form
+msgid "Check Status on Payplug"
+msgstr ""
+
+#. module: payment_payplug
+#: model:ir.model.fields,field_description:payment_payplug.field_payment_provider__code
+msgid "Code"
+msgstr ""
+
+#. module: payment_payplug
+#: model:ir.model.fields,field_description:payment_payplug.field_payment_provider__display_name
+#: model:ir.model.fields,field_description:payment_payplug.field_payment_transaction__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: payment_payplug
+#: model_terms:ir.ui.view,arch_db:payment_payplug.payment_transaction_form
+msgid "Fetch the status of this transaction from Payplug and update it."
+msgstr ""
+
+#. module: payment_payplug
+#: model:ir.model.fields,field_description:payment_payplug.field_payment_provider__id
+#: model:ir.model.fields,field_description:payment_payplug.field_payment_transaction__id
+msgid "ID"
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid ""
+"In test mode, the Payplug secret key must be a test key (starting with %s)."
+msgstr ""
+
+#. module: payment_payplug
+#: model:ir.model,name:payment_payplug.model_payment_provider
+msgid "Payment Provider"
+msgstr ""
+
+#. module: payment_payplug
+#: model:ir.model,name:payment_payplug.model_payment_transaction
+msgid "Payment Transaction"
+msgstr ""
+
+#. module: payment_payplug
+#: model:ir.model.fields.selection,name:payment_payplug.selection__payment_provider__code__payplug
+#: model:payment.provider,name:payment_payplug.payment_provider_payplug
+msgid "Payplug"
+msgstr ""
+
+#. module: payment_payplug
+#: model:ir.model.fields,field_description:payment_payplug.field_payment_provider__payplug_secret_key
+msgid "Payplug Secret Key"
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_transaction.py:0
+msgid "Payplug did not return any payment page URL."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_transaction.py:0
+msgid "Payplug does not accept refunds below %s."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_transaction.py:0
+msgid ""
+"Payplug only accepts card payments between %(minimum)s and %(maximum)s."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_transaction.py:0
+msgid "Payplug returned an object that is not a payment."
+msgstr ""
+
+#. module: payment_payplug
+#: model_terms:ir.ui.view,arch_db:payment_payplug.payment_provider_form
+msgid "Secret Key"
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_transaction.py:0
+msgid "The Payplug payment does not reference this transaction."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_transaction.py:0
+msgid ""
+"The Payplug payment environment (test or live) does not match the provider."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_transaction.py:0
+msgid "The Payplug payment id does not match the transaction."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_transaction.py:0
+msgid "The Payplug refund does not match the transaction."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_transaction.py:0
+msgid ""
+"The Payplug refund environment (test or live) does not match the provider."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_transaction.py:0
+msgid "The payment was canceled on Payplug (%s)."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_transaction.py:0
+msgid "The payment was refused by Payplug (%(code)s): %(message)s"
+msgstr ""
+
+#. module: payment_payplug
+#: model:ir.model.fields,help:payment_payplug.field_payment_provider__payplug_secret_key
+msgid ""
+"The secret key of your Payplug account: a test key (sk_test_...) in test "
+"mode, a live key (sk_live_...) when the provider is enabled."
+msgstr ""
+
+#. module: payment_payplug
+#: model:ir.model.fields,help:payment_payplug.field_payment_provider__code
+msgid "The technical code of this payment provider."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid ""
+"When the provider is enabled, the Payplug secret key must be a live key "
+"(starting with %s)."
+msgstr ""
+
+#. module: payment_payplug
+#: model_terms:payment.provider,auth_msg:payment_payplug.payment_provider_payplug
+msgid "Your payment has been authorized."
+msgstr ""
+
+#. module: payment_payplug
+#: model_terms:payment.provider,cancel_msg:payment_payplug.payment_provider_payplug
+msgid "Your payment has been cancelled."
+msgstr ""
+
+#. module: payment_payplug
+#: model_terms:payment.provider,pending_msg:payment_payplug.payment_provider_payplug
+msgid "Your payment has been processed but is waiting for approval."
+msgstr ""
+
+#. module: payment_payplug
+#: model_terms:payment.provider,done_msg:payment_payplug.payment_provider_payplug
+msgid "Your payment has been processed."
+msgstr ""
