@@ -118,7 +118,9 @@ class TestPayplugOAuth2(PayplugOAuth2Common):
         # One token for all the requests: creations, reading, refund, abortion.
         self.assertEqual(len(self._token_requests()), 1)
         self.assertEqual(len(self._api_requests()), 5)
-        self.assertEqual(set(self._api_tokens()), set(self.fake_payplug.issued_tokens()))
+        self.assertEqual(
+            set(self._api_tokens()), set(self.fake_payplug.issued_tokens())
+        )
 
     # === Cache === #
 
