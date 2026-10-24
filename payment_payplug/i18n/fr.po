@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 19.0-20260817\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-24 15:58+0000\n"
-"PO-Revision-Date: 2026-10-24 15:58+0000\n"
+"POT-Creation-Date: 2026-10-24 16:51+0000\n"
+"PO-Revision-Date: 2026-10-24 16:51+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -17,14 +17,49 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
 
 #. module: payment_payplug
+#: model:ir.model.fields.selection,name:payment_payplug.selection__payment_provider__payplug_auth_method__api_key
+msgid "API Key"
+msgstr "Clé API"
+
+#. module: payment_payplug
+#: model:ir.model.fields,help:payment_payplug.field_payment_provider__payplug_auth_method
+msgid ""
+"API Key: the secret key of your Payplug account is sent with every request.\n"
+"OAuth2: Odoo exchanges a client ID and secret for access tokens valid a few minutes, renewed automatically."
+msgstr ""
+"Clé API : la clé secrète de votre compte Payplug est envoyée à chaque requête.\n"
+"OAuth2 : Odoo échange un client ID et un client secret contre des jetons d'accès valables quelques minutes, renouvelés automatiquement."
+
+#. module: payment_payplug
+#: model_terms:ir.ui.view,arch_db:payment_payplug.payment_provider_form
+msgid "Authentication"
+msgstr "Authentification"
+
+#. module: payment_payplug
 #: model_terms:ir.ui.view,arch_db:payment_payplug.payment_transaction_form
 msgid "Check Status on Payplug"
 msgstr "Vérifier le statut sur Payplug"
 
 #. module: payment_payplug
+#: model_terms:ir.ui.view,arch_db:payment_payplug.payment_provider_form
+msgid "Client ID"
+msgstr "Client ID"
+
+#. module: payment_payplug
+#: model_terms:ir.ui.view,arch_db:payment_payplug.payment_provider_form
+msgid "Client Secret"
+msgstr "Client secret"
+
+#. module: payment_payplug
 #: model:ir.model.fields,field_description:payment_payplug.field_payment_provider__code
 msgid "Code"
 msgstr "Code"
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "Could not reach the Payplug authorization server to get an access token. Please try again later."
+msgstr "Impossible de joindre le serveur d'autorisation Payplug pour obtenir un jeton d'accès. Veuillez réessayer plus tard."
 
 #. module: payment_payplug
 #: model:ir.model.fields,field_description:payment_payplug.field_payment_provider__display_name
@@ -46,9 +81,19 @@ msgstr "ID"
 #. module: payment_payplug
 #. odoo-python
 #: code:addons/payment_payplug/models/payment_provider.py:0
-msgid ""
-"In test mode, the Payplug secret key must be a test key (starting with %s)."
+msgid "In test mode, the Payplug OAuth2 key must be a key of the Test environment (access token scope: %s)."
+msgstr "En mode test, la clé OAuth2 Payplug doit être une clé de l'environnement Test (portée du jeton d'accès : %s)."
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "In test mode, the Payplug secret key must be a test key (starting with %s)."
 msgstr "En mode test, la clé secrète Payplug doit être une clé de test (commençant par %s)."
+
+#. module: payment_payplug
+#: model:ir.model.fields.selection,name:payment_payplug.selection__payment_provider__payplug_auth_method__oauth2
+msgid "OAuth2"
+msgstr "OAuth2"
 
 #. module: payment_payplug
 #: model:ir.model,name:payment_payplug.model_payment_provider
@@ -65,6 +110,21 @@ msgstr "Transaction de paiement"
 #: model:payment.provider,name:payment_payplug.payment_provider_payplug
 msgid "Payplug"
 msgstr "Payplug"
+
+#. module: payment_payplug
+#: model:ir.model.fields,field_description:payment_payplug.field_payment_provider__payplug_auth_method
+msgid "Payplug Authentication"
+msgstr "Authentification Payplug"
+
+#. module: payment_payplug
+#: model:ir.model.fields,field_description:payment_payplug.field_payment_provider__payplug_client_id
+msgid "Payplug Client ID"
+msgstr "Client ID Payplug"
+
+#. module: payment_payplug
+#: model:ir.model.fields,field_description:payment_payplug.field_payment_provider__payplug_client_secret
+msgid "Payplug Client Secret"
+msgstr "Client secret Payplug"
 
 #. module: payment_payplug
 #: model:ir.model.fields,field_description:payment_payplug.field_payment_provider__payplug_secret_key
@@ -86,9 +146,26 @@ msgstr "Payplug n'accepte pas les remboursements inférieurs à %s."
 #. module: payment_payplug
 #. odoo-python
 #: code:addons/payment_payplug/models/payment_transaction.py:0
-msgid ""
-"Payplug only accepts card payments between %(minimum)s and %(maximum)s."
+msgid "Payplug only accepts card payments between %(minimum)s and %(maximum)s."
 msgstr "Payplug n'accepte les paiements par carte qu'entre %(minimum)s et %(maximum)s."
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "Payplug refused the OAuth2 client ID or secret. Check them, and check that the key belongs to the right environment (Test or Live)."
+msgstr "Payplug a refusé le client ID ou le client secret OAuth2. Vérifiez-les, ainsi que l'environnement de la clé (Test ou Live)."
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "Payplug refused the access token request (HTTP %(status)s %(error)s)."
+msgstr "Payplug a refusé la demande de jeton d'accès (HTTP %(status)s %(error)s)."
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "Payplug returned an invalid access token response."
+msgstr "Payplug a renvoyé une réponse de jeton d'accès invalide."
 
 #. module: payment_payplug
 #. odoo-python
@@ -103,6 +180,18 @@ msgstr "Clé secrète"
 
 #. module: payment_payplug
 #. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "The Payplug OAuth2 client ID and secret are not set."
+msgstr "Le client ID et le client secret OAuth2 Payplug ne sont pas renseignés."
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "The Payplug authorization server is unavailable (HTTP %s). Please try again later."
+msgstr "Le serveur d'autorisation Payplug est indisponible (HTTP %s). Veuillez réessayer plus tard."
+
+#. module: payment_payplug
+#. odoo-python
 #: code:addons/payment_payplug/models/payment_transaction.py:0
 msgid "The Payplug payment does not reference this transaction."
 msgstr "Le paiement Payplug ne fait pas référence à cette transaction."
@@ -110,8 +199,7 @@ msgstr "Le paiement Payplug ne fait pas référence à cette transaction."
 #. module: payment_payplug
 #. odoo-python
 #: code:addons/payment_payplug/models/payment_transaction.py:0
-msgid ""
-"The Payplug payment environment (test or live) does not match the provider."
+msgid "The Payplug payment environment (test or live) does not match the provider."
 msgstr "L'environnement du paiement Payplug (test ou production) ne correspond pas à celui du fournisseur."
 
 #. module: payment_payplug
@@ -129,9 +217,24 @@ msgstr "Le remboursement Payplug ne correspond pas à la transaction."
 #. module: payment_payplug
 #. odoo-python
 #: code:addons/payment_payplug/models/payment_transaction.py:0
-msgid ""
-"The Payplug refund environment (test or live) does not match the provider."
+msgid "The Payplug refund environment (test or live) does not match the provider."
 msgstr "L'environnement du remboursement Payplug (test ou production) ne correspond pas à celui du fournisseur."
+
+#. module: payment_payplug
+#: model:ir.model.fields,help:payment_payplug.field_payment_provider__payplug_client_id
+msgid "The client ID of an OAuth2 key of your Payplug account: a key of the Test environment in test mode, a key of the Live environment when the provider is enabled."
+msgstr "Le client ID d'une clé OAuth2 de votre compte Payplug : une clé de l'environnement Test en mode test, une clé de l'environnement Live quand le fournisseur est activé."
+
+#. module: payment_payplug
+#: model:ir.model.fields,help:payment_payplug.field_payment_provider__payplug_client_secret
+msgid "The client secret of the OAuth2 key, shown once by the Payplug portal when the key is created."
+msgstr "Le client secret de la clé OAuth2, affiché une seule fois par le portail Payplug à la création de la clé."
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "The following fields must be filled: %s"
+msgstr "Les champs suivants doivent être renseignés : %s"
 
 #. module: payment_payplug
 #. odoo-python
@@ -147,9 +250,7 @@ msgstr "Le paiement a été refusé par Payplug (%(code)s) : %(message)s"
 
 #. module: payment_payplug
 #: model:ir.model.fields,help:payment_payplug.field_payment_provider__payplug_secret_key
-msgid ""
-"The secret key of your Payplug account: a key of the Test environment in "
-"test mode, a key of the Live environment when the provider is enabled."
+msgid "The secret key of your Payplug account: a key of the Test environment in test mode, a key of the Live environment when the provider is enabled."
 msgstr "La clé secrète de votre compte Payplug : une clé de l'environnement Test en mode test, une clé de l'environnement Live quand le fournisseur est activé."
 
 #. module: payment_payplug
@@ -160,9 +261,13 @@ msgstr "Le code technique de ce fournisseur de paiement."
 #. module: payment_payplug
 #. odoo-python
 #: code:addons/payment_payplug/models/payment_provider.py:0
-msgid ""
-"When the provider is enabled, the Payplug secret key must be a live key "
-"(starting with %s)."
+msgid "When the provider is enabled, the Payplug OAuth2 key must be a key of the Live environment (access token scope: %s)."
+msgstr "Quand le fournisseur est activé, la clé OAuth2 Payplug doit être une clé de l'environnement Live (portée du jeton d'accès : %s)."
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "When the provider is enabled, the Payplug secret key must be a live key (starting with %s)."
 msgstr "Quand le fournisseur est activé, la clé secrète Payplug doit être une clé de production (commençant par %s)."
 
 #. module: payment_payplug

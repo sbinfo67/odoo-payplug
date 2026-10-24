@@ -3,16 +3,22 @@
 """Fake Payplug API server, for automated and manual tests only.
 
 It imitates the subset of the Payplug REST API used by the module (creating, reading
-and aborting a payment; creating and reading refunds) and a minimal hosted payment
-page. It keeps everything in memory and never contacts Payplug.
+and aborting a payment; creating and reading refunds), the OAuth2 token endpoint (client
+credentials grant) and a minimal hosted payment page. It keeps everything in memory and
+never contacts Payplug.
 
 Standalone use, for a manual end-to-end test (point the system parameter
 `payment_payplug.api_base_url` of the test database to http://<host>:<port>/v1/):
 
     python3 fake_payplug.py --host 0.0.0.0 --port 8765 --public-url http://<host>:8765
+
+The API accepts any secret key starting with `sk_test_` or `sk_live_`, and the access
+tokens issued by `POST /oauth2/token` to the fake OAuth2 clients below.
 """
 
 import argparse
+import base64
+import binascii
 import html
 import json
 import logging
@@ -27,6 +33,18 @@ from urllib.parse import parse_qs, urlsplit
 _logger = logging.getLogger(__name__)
 
 API_VERSION = "2019-08-06"
+TOKEN_AUDIENCE = "https://www.payplug.com"
+TOKEN_LIFETIME = 299  # Seconds, like Payplug.
+
+# Fake OAuth2 clients: client id -> (client secret, scope of their tokens).
+OAUTH2_CLIENTS = {
+    "fake_client_test": ("fake_client_secret_test", "test"),
+    "fake_client_live": ("fake_client_secret_live", "live"),
+}
+
+
+def _b64url(data):
+    return base64.urlsafe_b64encode(json.dumps(data).encode()).rstrip(b"=").decode()
 
 
 class FakePayplugError(Exception):
@@ -46,6 +64,15 @@ class FakePayplugState:
         self.refunds = {}
         self.requests = []  # (method, path, headers, body) of the API requests.
         self.notifications = []  # (url, body, status) of every notification sent.
+        self.token_requests = []  # (headers, body) of the token requests.
+        self.tokens = {}  # Access token -> {"scope", "expires_at", "revoked"}.
+        self._reset_token_settings()
+
+    def _reset_token_settings(self):
+        self.token_lifetime = TOKEN_LIFETIME
+        self.token_failure_status = None  # Force this status on the token endpoint.
+        self.token_scope = None  # Override the scope of the issued tokens.
+        self.reject_all_tokens = False  # Answer 401 to every access token.
 
     def reset(self):
         with self.lock:
@@ -53,6 +80,9 @@ class FakePayplugState:
             self.refunds.clear()
             self.requests.clear()
             self.notifications.clear()
+            self.token_requests.clear()
+            self.tokens.clear()
+            self._reset_token_settings()
 
 
 class FakePayplugServer:
@@ -132,6 +162,43 @@ class FakePayplugServer:
             payment["is_refunded"] = payment["amount_refunded"] >= payment["amount"]
             return refund
 
+    def issued_tokens(self):
+        """Return the access tokens issued, in order."""
+        return list(self.state.tokens)
+
+    def revoke_tokens(self):
+        """Revoke every access token issued: the API then answers 401 to them."""
+        with self.state.lock:
+            for token in self.state.tokens.values():
+                token["revoked"] = True
+
+    def issue_token(self, client_id, scope):
+        """Issue an access token shaped like the Payplug ones (an unsigned JWT)."""
+        issued_at = int(time.time())
+        lifetime = self.state.token_lifetime
+        claims = {
+            "aud": [TOKEN_AUDIENCE],
+            "client_id": client_id,
+            "exp": issued_at + lifetime,
+            "iat": issued_at,
+            "jti": secrets.token_hex(8),
+            "roles": ["plugin"],
+            "scp": scope.split(),
+        }
+        header = {"alg": "RS256", "typ": "JWT"}
+        token = ".".join((_b64url(header), _b64url(claims), secrets.token_urlsafe(32)))
+        self.state.tokens[token] = {
+            "scope": scope,
+            "expires_at": issued_at + lifetime,
+            "revoked": False,
+        }
+        return {
+            "access_token": token,
+            "expires_in": lifetime,
+            "scope": scope,
+            "token_type": "bearer",
+        }
+
     def send_notification(self, obj):
         """POST the object to the notification URL of its payment, like Payplug does."""
         payment = self.state.payments[obj.get("payment_id") or obj["id"]]
@@ -189,7 +256,63 @@ class FakePayplugHandler(BaseHTTPRequestHandler):
             return False
         if key.startswith("sk_live_"):
             return True
+        token = self.fake.state.tokens.get(key)
+        if (
+            token
+            and not token["revoked"]
+            and not self.fake.state.reject_all_tokens
+            and time.time() < token["expires_at"]
+        ):
+            return "live" in token["scope"].split()
         raise FakePayplugError(401, "Invalid API key.")
+
+    # === OAuth2 token endpoint === #
+
+    def _send_oauth2_error(self, status, error, description):
+        self._send_json(status, {"error": error, "error_description": description})
+
+    def _token(self, method, raw):
+        """POST /oauth2/token: the client credentials grant, client_secret_basic."""
+        state = self.fake.state
+        state.token_requests.append((dict(self.headers), raw))
+        if method != "POST":
+            return self._send_oauth2_error(405, "invalid_request", "POST only.")
+        if state.token_failure_status:
+            return self._send_json(
+                state.token_failure_status, {"error": "server_error"}
+            )
+        content_type = (self.headers.get("Content-Type") or "").split(";")[0]
+        if content_type != "application/x-www-form-urlencoded":
+            return self._send_oauth2_error(400, "invalid_request", "Form body only.")
+        body = {key: values[0] for key, values in parse_qs(raw.decode()).items()}
+        if "client_secret" in body or "client_id" in body:
+            return self._send_oauth2_error(
+                400, "invalid_request", "Use client_secret_basic."
+            )
+        auth = self.headers.get("Authorization") or ""
+        try:
+            decoded = base64.b64decode(auth[len("Basic ") :], validate=True).decode()
+        except (binascii.Error, UnicodeDecodeError):
+            decoded = ""
+        client_id, _sep, client_secret = decoded.partition(":")
+        client = OAUTH2_CLIENTS.get(client_id)
+        if (
+            not auth.startswith("Basic ")
+            or not client
+            or not secrets.compare_digest(client[0], client_secret)
+        ):
+            return self._send_oauth2_error(
+                401, "invalid_client", "Client authentication failed."
+            )
+        if body.get("grant_type") != "client_credentials":
+            return self._send_oauth2_error(
+                400, "unsupported_grant_type", "Unsupported grant type."
+            )
+        if body.get("audience") != TOKEN_AUDIENCE:
+            return self._send_oauth2_error(400, "invalid_request", "Invalid audience.")
+        with state.lock:
+            data = self.fake.issue_token(client_id, state.token_scope or client[1])
+        return self._send_json(200, data)
 
     def _get_payment(self, payment_id, is_live):
         payment = self.fake.state.payments.get(payment_id)
@@ -217,6 +340,8 @@ class FakePayplugHandler(BaseHTTPRequestHandler):
                 return self._hosted_page(method, parts, raw)
             if parts[:1] == ["_control"]:
                 return self._control(method, parts, raw)
+            if parts == ["oauth2", "token"]:
+                return self._token(method, raw)
             if parts[:1] != ["v1"]:
                 raise FakePayplugError(404, "Not found.")
             self.fake.state.requests.append((method, path, dict(self.headers), raw))

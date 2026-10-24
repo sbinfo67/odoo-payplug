@@ -8,6 +8,18 @@
 DEFAULT_API_BASE_URL = "https://api.payplug.com/v1/"
 API_BASE_URL_PARAM = "payment_payplug.api_base_url"
 
+# OAuth2 client credentials grant. By default, the token endpoint is `/oauth2/token` on
+# the host of the API. The system parameters below override the endpoint and the
+# audience; like the base URL, they are only meant for tests.
+TOKEN_PATH = "/oauth2/token"
+TOKEN_URL_PARAM = "payment_payplug.token_url"
+DEFAULT_TOKEN_AUDIENCE = "https://www.payplug.com"
+TOKEN_AUDIENCE_PARAM = "payment_payplug.token_audience"
+# Seconds before the expiry of an access token at which it is renewed.
+TOKEN_RENEWAL_MARGIN = 60
+# Timeout of the token requests, in seconds (the same as the API requests).
+TOKEN_REQUEST_TIMEOUT = 10
+
 # Version of the API used by this module, sent in the `PayPlug-Version` header.
 API_VERSION = "2019-08-06"
 
@@ -70,4 +82,11 @@ FIELD_MAX_LENGTHS = {
 DESCRIPTION_MAX_LENGTH = 80
 
 # Keys of the payment data that must never be logged.
-SENSITIVE_KEYS = {"secret_key", "Authorization"}
+SENSITIVE_KEYS = {
+    "secret_key",
+    "Authorization",
+    "client_secret",
+    "access_token",
+    "payplug_secret_key",
+    "payplug_client_secret",
+}

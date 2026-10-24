@@ -10,9 +10,29 @@
             <group name="provider_credentials" position="inside">
                 <group invisible="code != 'payplug'">
                     <field
+                        name="payplug_auth_method"
+                        string="Authentication"
+                        widget="radio"
+                        required="code == 'payplug'"
+                    />
+                    <field
                         name="payplug_secret_key"
                         string="Secret Key"
-                        required="code == 'payplug' and state != 'disabled'"
+                        invisible="payplug_auth_method == 'oauth2'"
+                        required="code == 'payplug' and state != 'disabled' and payplug_auth_method != 'oauth2'"
+                        password="True"
+                    />
+                    <field
+                        name="payplug_client_id"
+                        string="Client ID"
+                        invisible="payplug_auth_method != 'oauth2'"
+                        required="code == 'payplug' and state != 'disabled' and payplug_auth_method == 'oauth2'"
+                    />
+                    <field
+                        name="payplug_client_secret"
+                        string="Client Secret"
+                        invisible="payplug_auth_method != 'oauth2'"
+                        required="code == 'payplug' and state != 'disabled' and payplug_auth_method == 'oauth2'"
                         password="True"
                     />
                 </group>

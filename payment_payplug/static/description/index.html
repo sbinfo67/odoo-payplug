@@ -406,14 +406,15 @@ marque de son propriétaire.</p>
 <li><a class="reference internal" href="#development" id="toc-entry-4">Development</a></li>
 <li><a class="reference internal" href="#known-issues-roadmap" id="toc-entry-5">Known issues / Roadmap</a></li>
 <li><a class="reference internal" href="#changelog" id="toc-entry-6">Changelog</a><ul>
-<li><a class="reference internal" href="#section-1" id="toc-entry-7">19.0.1.0.0 (2026-10-24)</a></li>
+<li><a class="reference internal" href="#section-1" id="toc-entry-7">19.0.1.1.0 (2026-10-24)</a></li>
+<li><a class="reference internal" href="#section-2" id="toc-entry-8">19.0.1.0.0 (2026-10-24)</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#bug-tracker" id="toc-entry-8">Bug Tracker</a></li>
-<li><a class="reference internal" href="#credits" id="toc-entry-9">Credits</a><ul>
-<li><a class="reference internal" href="#authors" id="toc-entry-10">Authors</a></li>
-<li><a class="reference internal" href="#contributors" id="toc-entry-11">Contributors</a></li>
-<li><a class="reference internal" href="#maintainers" id="toc-entry-12">Maintainers</a></li>
+<li><a class="reference internal" href="#bug-tracker" id="toc-entry-9">Bug Tracker</a></li>
+<li><a class="reference internal" href="#credits" id="toc-entry-10">Credits</a><ul>
+<li><a class="reference internal" href="#authors" id="toc-entry-11">Authors</a></li>
+<li><a class="reference internal" href="#contributors" id="toc-entry-12">Contributors</a></li>
+<li><a class="reference internal" href="#maintainers" id="toc-entry-13">Maintainers</a></li>
 </ul>
 </li>
 </ul>
@@ -440,19 +441,40 @@ est supprimé.</p>
 <div class="section" id="configuration">
 <h2><a class="toc-backref" href="#toc-entry-2">Configuration</a></h2>
 <p><strong>Clés Payplug</strong></p>
+<p>Le module accepte deux méthodes d’authentification, au choix dans le
+champ <em>Authentification</em> de l’onglet <em>Identifiants</em> :</p>
+<ul class="simple">
+<li><strong>Clé API</strong> (par défaut) : la clé secrète du compte est envoyée à
+chaque requête ;</li>
+<li><strong>OAuth2</strong> : Odoo échange un identifiant client (<em>client ID</em>) et un
+secret client (<em>client secret</em>) contre des jetons d’accès valables 5
+minutes, demandés et renouvelés automatiquement. Le secret ne circule
+que vers le serveur d’autorisation de Payplug.</li>
+</ul>
 <ol class="arabic">
 <li><p class="first">Dans le portail Payplug, à la rubrique des clés d’API, générez une
-clé de type <strong>API Key</strong> (clé secrète) en environnement <strong>Test</strong> et,
-plus tard, une clé en environnement <strong>Live</strong>. Les clés actuelles sont
-des jetons JWT (<tt class="docutils literal"><span class="pre">eyJ...</span></tt>) ; les anciennes clés <tt class="docutils literal"><span class="pre">sk_test_...</span></tt> et
-<tt class="docutils literal"><span class="pre">sk_live_...</span></tt> sont aussi acceptées. La clé publique n’est pas
-utilisée : le module ne passe que par la page de paiement hébergée.</p>
+clé en environnement <strong>Test</strong> et, plus tard, une clé en environnement
+<strong>Live</strong> :</p>
+<ul class="simple">
+<li>pour la méthode <em>Clé API</em>, une clé de type <strong>API Key</strong> (clé
+secrète). Les clés actuelles sont des jetons JWT (<tt class="docutils literal"><span class="pre">eyJ...</span></tt>) ; les
+anciennes clés <tt class="docutils literal"><span class="pre">sk_test_...</span></tt> et <tt class="docutils literal"><span class="pre">sk_live_...</span></tt> sont aussi
+acceptées ;</li>
+<li>pour la méthode <em>OAuth2</em>, une clé de type <strong>OAuth2</strong>. Le portail
+affiche son <em>client ID</em> et son <em>client secret</em> ; notez le secret
+aussitôt, il n’est montré qu’une fois.</li>
+</ul>
+<p>La clé publique n’est pas utilisée : le module ne passe que par la
+page de paiement hébergée.</p>
 </li>
 <li><p class="first">Dans Odoo, ouvrez <em>Facturation (ou Comptabilité) &gt; Configuration &gt;
 Fournisseurs de paiement</em> et choisissez <strong>Payplug</strong>.</p>
 </li>
-<li><p class="first">Dans l’onglet <em>Identifiants</em>, collez la clé secrète. Seuls les
-administrateurs (groupe <em>Paramètres</em>) peuvent la lire ou la modifier.</p>
+<li><p class="first">Dans l’onglet <em>Identifiants</em>, choisissez la méthode
+d’authentification, puis collez la clé secrète (<em>Clé API</em>) ou le
+<em>client ID</em> et le <em>client secret</em> (<em>OAuth2</em>). Seuls les
+administrateurs (groupe <em>Paramètres</em>) peuvent les lire ou les
+modifier.</p>
 </li>
 <li><p class="first">Réglez l’état :</p>
 <ul class="simple">
@@ -463,7 +485,14 @@ réel ;</li>
 <p>Pour une ancienne clé <tt class="docutils literal"><span class="pre">sk_...</span></tt>, Odoo refuse une clé de production
 en mode test et une clé de test sur un fournisseur activé. Pour une
 clé JWT, l’accord entre le mode et la clé est vérifié à chaque
-paiement : un paiement dont le mode ne correspond pas est refusé.</p>
+paiement : un paiement dont le mode ne correspond pas est refusé. En
+OAuth2, l’environnement du jeton (<em>scope</em> <tt class="docutils literal">test</tt>) est en plus
+vérifié à chaque requête : en mode test, seul un jeton de
+l’environnement Test est accepté ; sur un fournisseur activé, un
+jeton de test est refusé.</p>
+<p>Pour passer de Test à Live en OAuth2, remplacez le <em>client ID</em> et le
+<em>client secret</em> par ceux de la clé Live en même temps que vous
+activez le fournisseur.</p>
 </li>
 <li><p class="first">Dans l’onglet <em>Configuration</em>, vérifiez le journal de paiement et les
 moyens de paiement. Par défaut, seul <em>Carte</em> (CB, Visa, Mastercard)
@@ -488,10 +517,27 @@ notification.</li>
 </ul>
 <p>Les retours du client passent par <tt class="docutils literal">/payment/payplug/return</tt> et
 <tt class="docutils literal">/payment/payplug/cancel</tt>.</p>
-<p><strong>Paramètre système réservé aux tests</strong></p>
-<p><tt class="docutils literal">payment_payplug.api_base_url</tt> remplace l’adresse de l’API Payplug
-(<tt class="docutils literal"><span class="pre">https://api.payplug.com/v1/</span></tt> par défaut). Il ne sert qu’à pointer
-vers un faux serveur de test ; ne le créez pas en production.</p>
+<p><strong>Jetons d’accès OAuth2</strong></p>
+<p>Un jeton dure 5 minutes ; Odoo le garde en mémoire et en demande un
+nouveau une minute avant son expiration. Les jetons ne sont jamais
+écrits en base ni dans les journaux ; chaque processus (worker) d’Odoo
+demande les siens. Si Payplug refuse un jeton (HTTP 401), Odoo l’oublie,
+en demande un autre et renvoie la requête une seule fois. Après une
+modification des identifiants, chaque processus demande un nouveau jeton
+dès sa requête suivante ; après un changement d’état, le jeton en
+mémoire est de nouveau confronté au mode du fournisseur.</p>
+<p><strong>Paramètres système réservés aux tests</strong></p>
+<p>Ils ne servent qu’à pointer vers un faux serveur de test ; ne les créez
+pas en production.</p>
+<ul class="simple">
+<li><tt class="docutils literal">payment_payplug.api_base_url</tt> remplace l’adresse de l’API Payplug
+(<tt class="docutils literal"><span class="pre">https://api.payplug.com/v1/</span></tt> par défaut) ;</li>
+<li><tt class="docutils literal">payment_payplug.token_url</tt> remplace l’adresse du point d’obtention
+des jetons OAuth2 (par défaut <tt class="docutils literal">/oauth2/token</tt> sur l’hôte de l’API,
+soit <tt class="docutils literal"><span class="pre">https://api.payplug.com/oauth2/token</span></tt>) ;</li>
+<li><tt class="docutils literal">payment_payplug.token_audience</tt> remplace l’audience demandée pour
+les jetons (<tt class="docutils literal"><span class="pre">https://www.payplug.com</span></tt> par défaut).</li>
+</ul>
 </div>
 <div class="section" id="usage">
 <h2><a class="toc-backref" href="#toc-entry-3">Usage</a></h2>
@@ -538,10 +584,25 @@ python3<span class="w"> </span>payment_payplug/tests/fake_payplug.py<span class=
 commençant par <tt class="docutils literal">sk_test_</tt>. <tt class="docutils literal">POST <span class="pre">/_control/refund/&lt;id</span> du paiement&gt;</tt>
 (corps <tt class="docutils literal">{&quot;amount&quot;: 1000}</tt>) simule un remboursement fait depuis le
 portail Payplug.</p>
+<p>Pour essayer la méthode OAuth2, le faux serveur répond aussi sur
+<tt class="docutils literal">POST /oauth2/token</tt> (authentification <em>Basic</em>,
+<tt class="docutils literal">grant_type=client_credentials</tt>, audience <tt class="docutils literal"><span class="pre">https://www.payplug.com</span></tt>)
+avec deux clients factices : <tt class="docutils literal">fake_client_test</tt> /
+<tt class="docutils literal">fake_client_secret_test</tt> (jetons de test) et <tt class="docutils literal">fake_client_live</tt> /
+<tt class="docutils literal">fake_client_secret_live</tt> (jetons Live). L’adresse du point de jeton
+se déduit de <tt class="docutils literal">payment_payplug.api_base_url</tt> ; il n’y a rien d’autre à
+régler.</p>
 </div>
 <div class="section" id="known-issues-roadmap">
 <h2><a class="toc-backref" href="#toc-entry-5">Known issues / Roadmap</a></h2>
 <ul class="simple">
+<li>Connexion « avec son compte Payplug » (OAuth2 <em>authorization code</em> +
+PKCE, chemin <tt class="docutils literal">/oauth2/auth</tt>) : hors périmètre. Ce flux demande un
+client enregistré par Payplug avec une adresse de rappel ; le module
+se limite au flux <em>client credentials</em> avec une clé OAuth2 créée dans
+le portail.</li>
+<li>Prévu pour une version 3 : paiement en un clic (carte enregistrée),
+paiement fractionné, paiement différé, Apple Pay et paiement intégré.</li>
 <li>Paiement en plusieurs fois (Oney 3x/4x) : non pris en charge. Il
 demande le panier détaillé (<tt class="docutils literal">payment_context</tt>), une autorisation
 puis une capture, et des montants entre 100 € et 3 000 €.</li>
@@ -573,13 +634,26 @@ téléphone, pays) ;</li>
 <em>Annuler</em> ;</li>
 <li>les valeurs de <tt class="docutils literal">card.brand</tt> (Visa, Mastercard, CB…) ;</li>
 <li>Bancontact, iDEAL et MyBank, qui demandent une activation sur le
-compte Payplug.</li>
+compte Payplug ;</li>
+<li>en OAuth2 : la valeur du <em>scope</em> des jetons de l’environnement Live
+(<tt class="docutils literal">live</tt> est supposé ; une autre valeur est tolérée sur un
+fournisseur activé, le mode de chaque paiement restant vérifié).</li>
 </ul>
 </div>
 <div class="section" id="changelog">
 <h2><a class="toc-backref" href="#toc-entry-6">Changelog</a></h2>
 <div class="section" id="section-1">
-<h3><a class="toc-backref" href="#toc-entry-7">19.0.1.0.0 (2026-10-24)</a></h3>
+<h3><a class="toc-backref" href="#toc-entry-7">19.0.1.1.0 (2026-10-24)</a></h3>
+<ul class="simple">
+<li>Authentification OAuth2 (<em>client credentials</em>) au choix, à côté de la
+clé API : jetons d’accès de 5 minutes gardés en mémoire et renouvelés
+automatiquement, nouvelle demande et renvoi unique de la requête si
+Payplug refuse le jeton, contrôle de l’environnement (Test ou Live) du
+jeton.</li>
+</ul>
+</div>
+<div class="section" id="section-2">
+<h3><a class="toc-backref" href="#toc-entry-8">19.0.1.0.0 (2026-10-24)</a></h3>
 <ul class="simple">
 <li>Première version : paiement par la page hébergée Payplug,
 notifications, remboursements totaux et partiels, paiement des
@@ -588,7 +662,7 @@ factures.</li>
 </div>
 </div>
 <div class="section" id="bug-tracker">
-<h2><a class="toc-backref" href="#toc-entry-8">Bug Tracker</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-9">Bug Tracker</a></h2>
 <p>Bugs are tracked on <a class="reference external" href="https://github.com/sbinfo67/odoo-payplug/issues">GitHub Issues</a>.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
@@ -596,21 +670,21 @@ If you spotted it first, help us to smash it by providing a detailed and welcome
 <p>Do not contact contributors directly about support or help with technical issues.</p>
 </div>
 <div class="section" id="credits">
-<h2><a class="toc-backref" href="#toc-entry-9">Credits</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-10">Credits</a></h2>
 <div class="section" id="authors">
-<h3><a class="toc-backref" href="#toc-entry-10">Authors</a></h3>
+<h3><a class="toc-backref" href="#toc-entry-11">Authors</a></h3>
 <ul class="simple">
 <li>Sébastien Berger (sbinfo67)</li>
 </ul>
 </div>
 <div class="section" id="contributors">
-<h3><a class="toc-backref" href="#toc-entry-11">Contributors</a></h3>
+<h3><a class="toc-backref" href="#toc-entry-12">Contributors</a></h3>
 <ul class="simple">
 <li>Sébastien Berger &lt;<a class="reference external" href="mailto:contact&#64;sbinfo.pro">contact&#64;sbinfo.pro</a>&gt;</li>
 </ul>
 </div>
 <div class="section" id="maintainers">
-<h3><a class="toc-backref" href="#toc-entry-12">Maintainers</a></h3>
+<h3><a class="toc-backref" href="#toc-entry-13">Maintainers</a></h3>
 <p>Current maintainer:</p>
 <p><a class="reference external image-reference" href="https://github.com/sbinfo67"><img alt="sbinfo67" src="https://github.com/sbinfo67.png?size=40px" /></a></p>
 <p>This module is part of the <a class="reference external" href="https://github.com/sbinfo67/odoo-payplug/tree/19.0/payment_payplug">sbinfo67/odoo-payplug</a> project on GitHub.</p>

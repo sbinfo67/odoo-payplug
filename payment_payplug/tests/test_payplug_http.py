@@ -9,7 +9,7 @@ from odoo.tools import mute_logger
 from odoo.addons.payment.tests.http_common import PaymentHttpCommon
 
 from ..controllers.main import PayplugController
-from .common import PayplugCommon
+from .common import PayplugCommon, PayplugOAuth2Common
 
 LOGGERS = (
     "odoo.addons.payment_payplug.controllers.main",
@@ -188,3 +188,18 @@ class TestPayplugHttp(PayplugCommon, PaymentHttpCommon):
         self.fake_payplug.mark_paid(tx.provider_reference)
         tx._payplug_fetch_and_process()
         return tx
+
+
+@tagged("post_install", "-at_install", "payment_payplug")
+class TestPayplugOAuth2Http(PayplugOAuth2Common, PaymentHttpCommon):
+    @mute_logger(*LOGGERS)
+    def test_webhook_with_oauth2(self):
+        tx, _values = self._create_payplug_payment()
+        payment = self.fake_payplug.mark_paid(tx.provider_reference)
+        url = self._build_url(PayplugController._webhook_url)
+        response = self.url_open(url, json=self._notification(payment))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(tx.state, "done")
+        # The request served by the HTTP worker thread reused the cached token.
+        self.assertEqual(len(self.fake_payplug.state.token_requests), 1)
+        self.assertEqual(len(self.fake_payplug.state.requests), 2)
