@@ -27,3 +27,23 @@ Payplug n'accepte pas de remboursement inférieur à 0,10 €.
 Sur une transaction Payplug en attente ou en erreur, le bouton *Vérifier le statut sur
 Payplug* relit le paiement auprès de Payplug et met la transaction à jour (utile si une
 notification n'a pas pu arriver).
+
+**Référence de paiement Payplug sur la facture**
+
+Les factures clients portent un champ *Payplug Payment Reference*
+(`payplug_payment_ref`), à côté de la référence de paiement, dans l'onglet des
+informations complémentaires.
+
+Il sert au rapprochement des virements Payplug. Un virement regroupe plusieurs
+paiements, frais déduits, et son libellé bancaire ne porte aucune référence de
+commande : ni le nom du client ni la référence de la commande ne suffisent à retrouver
+à quelle facture il se rapporte. L'identifiant du paiement, lui, est sans ambiguïté.
+
+Le champ ne concerne que les ventes encaissées **hors d'Odoo**, typiquement une
+boutique PrestaShop dont la synchronisation l'alimente. Un paiement pris par Odoo
+lui-même — page de paiement, lien de paiement — garde son identifiant sur sa
+transaction (`payment.transaction.provider_reference`) et n'a pas besoin de ce champ.
+
+Le contenu est l'identifiant brut tel que la boutique l'a enregistré : `pay_…` pour une
+carte, `inst_…` pour un paiement en plusieurs fois. Le champ est indexé, et n'est pas
+repris lors de la duplication d'une facture.
