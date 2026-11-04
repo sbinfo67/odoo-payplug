@@ -3,7 +3,7 @@
 
 {
     "name": "Payment Provider: Payplug",
-    "version": "19.0.1.2.0",
+    "version": "19.0.1.3.0",
     "category": "Accounting/Payment Providers",
     "summary": "Payplug payment provider: hosted payment page, refunds",
     "author": "Sébastien Berger (sbinfo67), Odoo Community Association (OCA)",

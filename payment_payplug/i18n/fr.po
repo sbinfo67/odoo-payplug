@@ -289,3 +289,51 @@ msgstr "Votre paiement a été traité mais est en attente d’approbation."
 #: model_terms:payment.provider,done_msg:payment_payplug.payment_provider_payplug
 msgid "Your payment has been processed."
 msgstr "Votre paiement a été traité."
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "Could not download the Payplug accounting report (HTTP %s)."
+msgstr "Impossible de télécharger le rapport comptable Payplug (HTTP %s)."
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "Could not download the Payplug accounting report."
+msgstr "Impossible de télécharger le rapport comptable Payplug."
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "Invalid Payplug accounting report identifier."
+msgstr "Identifiant de rapport comptable Payplug invalide."
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "Payplug returned an invalid accounting report."
+msgstr "Payplug a renvoyé un rapport comptable invalide."
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "The Payplug accounting report %(report)s is still not ready after %(seconds)s seconds. Please try again in a few minutes."
+msgstr "Le rapport comptable Payplug %(report)s n'est toujours pas prêt après %(seconds)s secondes. Réessayez dans quelques minutes."
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "The Payplug accounting report has no valid download link."
+msgstr "Le rapport comptable Payplug n'a pas de lien de téléchargement valide."
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "The Payplug accounting report is not valid UTF-8 text."
+msgstr "Le rapport comptable Payplug n'est pas un texte UTF-8 valide."
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "The period of a Payplug accounting report is invalid."
+msgstr "La période du rapport comptable Payplug est invalide."

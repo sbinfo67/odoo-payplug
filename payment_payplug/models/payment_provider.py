@@ -3,11 +3,12 @@
 
 import re
 import threading
+import time
 from urllib.parse import urlsplit, urlunsplit
 
 import requests
 
-from odoo import api, fields, models
+from odoo import api, fields, models, release
 from odoo.exceptions import ValidationError
 from odoo.tools import urls
 
@@ -30,6 +31,8 @@ OAUTH2_FIELDS = {
 _last_api_error = threading.local()
 
 OAUTH2_ERROR_CODE_RE = re.compile(r"^[a-z_]{1,64}$")
+# Identifiers of the accounting reports, checked before they go into a URL path.
+ACCOUNTING_REPORT_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 
 
 class PaymentProvider(models.Model):
@@ -220,6 +223,15 @@ class PaymentProvider(models.Model):
             (split_url.scheme, split_url.netloc, const.TOKEN_PATH, "", "")
         )
 
+    @api.model
+    def _payplug_get_user_agent(self):
+        """Return the `User-Agent` header of the requests sent to Payplug.
+
+        Cloudflare, in front of the API, answers 403 (error 1010) to some generic client
+        signatures; the requests therefore name the module and the version of Odoo.
+        """
+        return f"{const.USER_AGENT} (Odoo {release.version})"
+
     def _payplug_get_token_audience(self):
         """Return the audience requested for the OAuth2 access tokens."""
         return (
@@ -311,7 +323,10 @@ class PaymentProvider(models.Model):
                 token_url,
                 data={"grant_type": "client_credentials", "audience": audience},
                 auth=(client_id.encode(), client_secret.encode()),
-                headers={"Accept": "application/json"},
+                headers={
+                    "Accept": "application/json",
+                    "User-Agent": self._payplug_get_user_agent(),
+                },
                 timeout=const.TOKEN_REQUEST_TIMEOUT,
                 allow_redirects=False,
             )
@@ -476,6 +491,7 @@ class PaymentProvider(models.Model):
             "Authorization": self._payplug_get_authorization_header(),
             "Content-Type": "application/json",
             "PayPlug-Version": const.API_VERSION,
+            "User-Agent": self._payplug_get_user_agent(),
         }
 
     def _parse_response_error(self, response):
@@ -494,3 +510,174 @@ class PaymentProvider(models.Model):
         if details:
             message = f"{message} {details}"
         return message
+
+    # === ACCOUNTING REPORTS === #
+
+    def _payplug_create_accounting_report(self, start_date, end_date):
+        """Ask Payplug to generate the accounting report of a period.
+
+        `POST /accounting_reports`. The report lists every operation of the account in
+        the period (payments, refunds, transfers to the bank account, invoices of
+        Payplug paid from the balance), with their exact fees. It is generated
+        asynchronously: the returned report has no `temporary_url` yet. Creating a
+        report has no effect on the account; it only creates a file.
+
+        Note: self.ensure_one()
+
+        :param datetime.date start_date: The first day of the period.
+        :param datetime.date end_date: The last day of the period.
+        :return: The report, as returned by the API.
+        :rtype: dict
+        :raise ValidationError: If the period is invalid or the request fails.
+        """
+        self.ensure_one()
+        if not start_date or not end_date or start_date > end_date:
+            raise ValidationError(
+                self.env._("The period of a Payplug accounting report is invalid.")
+            )
+        report = self._send_api_request(
+            "POST",
+            "accounting_reports",
+            json={
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+            },
+        )
+        self._payplug_check_accounting_report(report)
+        return report
+
+    def _payplug_get_accounting_report(self, report_id):
+        """Read an accounting report: `GET /accounting_reports/{id}`.
+
+        Note: self.ensure_one()
+
+        :param str report_id: The identifier of the report.
+        :return: The report, with its `temporary_url` once the file is ready.
+        :rtype: dict
+        :raise ValidationError: If the identifier is invalid or the request fails.
+        """
+        self.ensure_one()
+        if not isinstance(report_id, str) or not ACCOUNTING_REPORT_ID_RE.match(
+            report_id
+        ):
+            raise ValidationError(
+                self.env._("Invalid Payplug accounting report identifier.")
+            )
+        report = self._send_api_request("GET", f"accounting_reports/{report_id}")
+        self._payplug_check_accounting_report(report)
+        return report
+
+    def _payplug_check_accounting_report(self, report):
+        """Check that an API response is an accounting report with an identifier."""
+        if (
+            not isinstance(report, dict)
+            or not isinstance(report.get("id"), str)
+            or not ACCOUNTING_REPORT_ID_RE.match(report["id"])
+        ):
+            raise ValidationError(
+                self.env._("Payplug returned an invalid accounting report.")
+            )
+
+    def _payplug_download_accounting_report(self, report):
+        """Download the file of a ready accounting report and return its text.
+
+        The file is fetched from the `temporary_url` of the report, a temporary link of
+        the storage of Payplug: the API credentials are not sent there. The link must
+        be HTTPS, unless it is on the host of the API itself (fake server of the
+        tests).
+
+        :param dict report: The report, with its `temporary_url`.
+        :return: The content of the file (CSV, UTF-8).
+        :rtype: str
+        :raise ValidationError: If the link is invalid or the download fails.
+        """
+        url = report.get("temporary_url") if isinstance(report, dict) else None
+        split_url = urlsplit(url) if isinstance(url, str) else None
+        api_url = urlsplit(self._payplug_get_api_base_url())
+        if (
+            not split_url
+            or not split_url.netloc
+            or not (
+                split_url.scheme == "https"
+                or (split_url.scheme, split_url.netloc)
+                == (api_url.scheme, api_url.netloc)
+            )
+        ):
+            raise ValidationError(
+                self.env._("The Payplug accounting report has no valid download link.")
+            )
+        try:
+            response = requests.get(
+                url,
+                headers={"User-Agent": self._payplug_get_user_agent()},
+                timeout=const.ACCOUNTING_REPORT_DOWNLOAD_TIMEOUT,
+                allow_redirects=False,
+            )
+        except requests.exceptions.RequestException as error:
+            _logger.warning(
+                "Download of the Payplug accounting report %s failed: %s",
+                report.get("id"),
+                type(error).__name__,
+            )
+            raise ValidationError(
+                self.env._("Could not download the Payplug accounting report.")
+            ) from None
+        if response.status_code != 200:
+            _logger.warning(
+                "Download of the Payplug accounting report %s failed: HTTP %s",
+                report.get("id"),
+                response.status_code,
+            )
+            raise ValidationError(
+                self.env._(
+                    "Could not download the Payplug accounting report (HTTP %s).",
+                    response.status_code,
+                )
+            )
+        try:
+            return response.content.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            raise ValidationError(
+                self.env._("The Payplug accounting report is not valid UTF-8 text.")
+            ) from None
+
+    def _payplug_fetch_accounting_report(
+        self, start_date, end_date, max_wait=None, poll_interval=None
+    ):
+        """Generate the accounting report of a period, wait for it and download it.
+
+        Payplug needs a few seconds to generate the file: the report is read again
+        every `poll_interval` seconds, for at most `max_wait` seconds.
+
+        Note: self.ensure_one()
+
+        :param datetime.date start_date: The first day of the period.
+        :param datetime.date end_date: The last day of the period.
+        :param float max_wait: The maximum wait, in seconds.
+        :param float poll_interval: The delay between two readings, in seconds.
+        :return: The report (as returned by the API) and the text of its file.
+        :rtype: tuple(dict, str)
+        :raise ValidationError: If a request fails or the report is not ready in time.
+        """
+        self.ensure_one()
+        max_wait = const.ACCOUNTING_REPORT_MAX_WAIT if max_wait is None else max_wait
+        poll_interval = (
+            const.ACCOUNTING_REPORT_POLL_INTERVAL
+            if poll_interval is None
+            else poll_interval
+        )
+        report = self._payplug_create_accounting_report(start_date, end_date)
+        deadline = time.monotonic() + max_wait
+        while not report.get("temporary_url"):
+            if time.monotonic() >= deadline:
+                raise ValidationError(
+                    self.env._(
+                        "The Payplug accounting report %(report)s is still not ready "
+                        "after %(seconds)s seconds. Please try again in a few minutes.",
+                        report=report["id"],
+                        seconds=max_wait,
+                    )
+                )
+            time.sleep(poll_interval)
+            report = self._payplug_get_accounting_report(report["id"])
+        return report, self._payplug_download_accounting_report(report)

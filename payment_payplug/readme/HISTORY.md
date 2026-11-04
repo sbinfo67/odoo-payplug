@@ -1,3 +1,10 @@
+## 19.0.1.3.0 (2026-11-04)
+
+- Lecture du rapport comptable Payplug (`/accounting_reports`) : création, attente du
+  fichier et téléchargement, pour les modules de rapprochement bancaire.
+- En-tête `User-Agent` explicite sur toutes les requêtes envoyées à Payplug (Cloudflare
+  refuse certaines signatures de client génériques).
+
 ## 19.0.1.1.0 (2026-10-24)
 
 - Authentification OAuth2 (*client credentials*) au choix, à côté de la clé API : jetons

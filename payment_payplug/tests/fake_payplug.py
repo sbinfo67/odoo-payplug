@@ -3,8 +3,9 @@
 """Fake Payplug API server, for automated and manual tests only.
 
 It imitates the subset of the Payplug REST API used by the module (creating, reading
-and aborting a payment; creating and reading refunds), the OAuth2 token endpoint (client
-credentials grant) and a minimal hosted payment page. It keeps everything in memory and
+and aborting a payment; creating and reading refunds; creating and reading accounting
+reports, and downloading their file), the OAuth2 token endpoint (client credentials
+grant) and a minimal hosted payment page. It keeps everything in memory and
 never contacts Payplug.
 
 Standalone use, for a manual end-to-end test (point the system parameter
@@ -66,7 +67,16 @@ class FakePayplugState:
         self.notifications = []  # (url, body, status) of every notification sent.
         self.token_requests = []  # (headers, body) of the token requests.
         self.tokens = {}  # Access token -> {"scope", "expires_at", "revoked"}.
+        self.accounting_reports = {}  # Report id -> report.
+        self.file_requests = []  # (path, headers) of the report file downloads.
         self._reset_token_settings()
+        self._reset_report_settings()
+
+    def _reset_report_settings(self):
+        # Text of the CSV file of every accounting report.
+        self.accounting_report_csv = ""
+        # Number of readings of a report before its file is ready.
+        self.accounting_report_polls = 1
 
     def _reset_token_settings(self):
         self.token_lifetime = TOKEN_LIFETIME
@@ -82,7 +92,10 @@ class FakePayplugState:
             self.notifications.clear()
             self.token_requests.clear()
             self.tokens.clear()
+            self.accounting_reports.clear()
+            self.file_requests.clear()
             self._reset_token_settings()
+            self._reset_report_settings()
 
 
 class FakePayplugServer:
@@ -340,6 +353,8 @@ class FakePayplugHandler(BaseHTTPRequestHandler):
                 return self._hosted_page(method, parts, raw)
             if parts[:1] == ["_control"]:
                 return self._control(method, parts, raw)
+            if parts[:2] == ["_files", "accounting_reports"]:
+                return self._report_file(method, parts)
             if parts == ["oauth2", "token"]:
                 return self._token(method, raw)
             if parts[:1] != ["v1"]:
@@ -398,6 +413,10 @@ class FakePayplugHandler(BaseHTTPRequestHandler):
                     if r["payment_id"] == parts[1]
                 ]
                 return 200, {"object": "list", "data": refunds}
+        if parts == ["accounting_reports"] and method == "POST":
+            return 201, self._create_accounting_report(body, is_live)
+        if len(parts) == 2 and parts[0] == "accounting_reports" and method == "GET":
+            return 200, self._read_accounting_report(parts[1], is_live)
         if len(parts) == 4 and parts[0] == "payments" and parts[2] == "refunds":
             self._get_payment(parts[1], is_live)
             refund = self.fake.state.refunds.get(parts[3])
@@ -466,6 +485,66 @@ class FakePayplugHandler(BaseHTTPRequestHandler):
         self.fake.state.payments[payment_id] = payment
         return payment
 
+    # === Accounting reports === #
+
+    def _create_accounting_report(self, body, is_live):
+        """POST /v1/accounting_reports: the file is generated later (polls)."""
+        details = {}
+        dates = {}
+        for key in ("start_date", "end_date"):
+            try:
+                dates[key] = time.strptime(body.get(key) or "", "%Y-%m-%d")
+            except (TypeError, ValueError):
+                details[key] = "A date YYYY-MM-DD is required."
+        if not details and dates["start_date"] > dates["end_date"]:
+            details["end_date"] = "The end date must follow the start date."
+        if details:
+            raise FakePayplugError(400, "Invalid parameters.", details)
+        report = {
+            "id": f"ar_{secrets.token_hex(10)}",
+            "object": "accounting_report",
+            "is_live": is_live,
+            "start_date": body["start_date"],
+            "end_date": body["end_date"],
+            "created_at": int(time.time()),
+            "temporary_url": None,
+            "_polls_left": self.fake.state.accounting_report_polls,
+        }
+        self.fake.state.accounting_reports[report["id"]] = report
+        return self._public_report(report)
+
+    def _read_accounting_report(self, report_id, is_live):
+        """GET /v1/accounting_reports/<id>: ready after a number of readings."""
+        report = self.fake.state.accounting_reports.get(report_id)
+        if not report or report["is_live"] != is_live:
+            raise FakePayplugError(
+                404, "The resource you requested could not be found."
+            )
+        report["_polls_left"] -= 1
+        if report["_polls_left"] <= 0 and not report["temporary_url"]:
+            report["temporary_url"] = (
+                f"{self.fake.public_url}/_files/accounting_reports/{report_id}.csv"
+            )
+        return self._public_report(report)
+
+    @staticmethod
+    def _public_report(report):
+        return {key: value for key, value in report.items() if key[0] != "_"}
+
+    def _report_file(self, method, parts):
+        """GET /_files/accounting_reports/<id>.csv: the file (temporary link)."""
+        self.fake.state.file_requests.append(("/".join(parts), dict(self.headers)))
+        report_id = parts[2].removesuffix(".csv") if len(parts) == 3 else ""
+        report = self.fake.state.accounting_reports.get(report_id)
+        if method != "GET" or not report or not report["temporary_url"]:
+            raise FakePayplugError(404, "Not found.")
+        body = ("\ufeff" + self.fake.state.accounting_report_csv).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/csv; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     # === Control routes (manual tests) === #
 
     def _control(self, method, parts, raw):
@@ -532,9 +611,17 @@ def main():
     parser.add_argument(
         "--public-url", help="URL of the hosted pages seen by the browser"
     )
+    parser.add_argument(
+        "--accounting-report-csv",
+        metavar="FILE",
+        help="CSV file served as the content of every accounting report",
+    )
     args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG)
     server = FakePayplugServer(args.host, args.port, args.public_url, notify=True)
+    if args.accounting_report_csv:
+        with open(args.accounting_report_csv, encoding="utf-8-sig") as file:
+            server.state.accounting_report_csv = file.read()
     _logger.info(
         "Fake Payplug API on %s (pages on %s)", server.api_url, server.public_url
     )

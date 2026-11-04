@@ -220,6 +220,30 @@ Sur une transaction Payplug en attente ou en erreur, le bouton *Vérifier
 le statut sur Payplug* relit le paiement auprès de Payplug et met la
 transaction à jour (utile si une notification n'a pas pu arriver).
 
+**Référence de paiement Payplug sur la facture**
+
+Les factures clients portent un champ *Payplug Payment Reference*
+(``payplug_payment_ref``), dans l'en-tête du formulaire, à l'emplacement
+qu'occupe la référence de paiement sur les factures fournisseur.
+
+Il sert au rapprochement des virements Payplug. Un virement regroupe
+plusieurs paiements, frais déduits, et son libellé bancaire ne porte
+aucune référence de commande : ni le nom du client ni la référence de la
+commande ne suffisent à retrouver à quelle facture il se rapporte.
+L'identifiant du paiement, lui, est sans ambiguïté.
+
+Le champ ne concerne que les ventes encaissées **hors d'Odoo**,
+typiquement une boutique PrestaShop dont la synchronisation l'alimente.
+Un paiement pris par Odoo lui-même — page de paiement, lien de paiement
+— garde son identifiant sur sa transaction
+(``payment.transaction.provider_reference``) et n'a pas besoin de ce
+champ.
+
+Le contenu est l'identifiant brut tel que la boutique l'a enregistré :
+``pay_…`` pour une carte, ``inst_…`` pour un paiement en plusieurs fois.
+Le champ est indexé, et n'est pas repris lors de la duplication d'une
+facture.
+
 Development
 ===========
 
@@ -251,6 +275,25 @@ avec deux clients factices : ``fake_client_test`` /
 ``fake_client_secret_live`` (jetons Live). L'adresse du point de jeton
 se déduit de ``payment_payplug.api_base_url`` ; il n'y a rien d'autre à
 régler.
+
+**Rapport comptable.** Le fournisseur sait lire le rapport comptable de
+Payplug, pour un module de rapprochement bancaire par exemple (ce module
+n'écrit rien en comptabilité) :
+
+.. code:: python
+
+   report, csv_text = provider._payplug_fetch_accounting_report(start_date, end_date)
+
+``_payplug_create_accounting_report`` (``POST /accounting_reports``)
+demande le fichier, ``_payplug_get_accounting_report`` le relit jusqu'à
+ce que son ``temporary_url`` soit rempli (quelques secondes ; attente
+bornée à 90 s par défaut), puis ``_payplug_download_accounting_report``
+le télécharge, sans les identifiants de l'API. Le CSV (UTF-8, montants
+en centimes) liste les paiements, remboursements, virements vers la
+banque et factures Payplug prélevées sur le solde, avec les frais
+exacts. Le faux serveur sert le même fichier :
+``--accounting-report-csv FICHIER`` en mode manuel, ou
+``state.accounting_report_csv`` dans les tests.
 
 Known issues / Roadmap
 ======================
@@ -300,6 +343,15 @@ compte) :
 
 Changelog
 =========
+
+19.0.1.3.0 (2026-11-04)
+-----------------------
+
+- Lecture du rapport comptable Payplug (``/accounting_reports``) :
+  création, attente du fichier et téléchargement, pour les modules de
+  rapprochement bancaire.
+- En-tête ``User-Agent`` explicite sur toutes les requêtes envoyées à
+  Payplug (Cloudflare refuse certaines signatures de client génériques).
 
 19.0.1.1.0 (2026-10-24)
 -----------------------

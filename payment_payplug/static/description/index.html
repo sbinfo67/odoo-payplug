@@ -406,15 +406,16 @@ marque de son propriétaire.</p>
 <li><a class="reference internal" href="#development" id="toc-entry-4">Development</a></li>
 <li><a class="reference internal" href="#known-issues-roadmap" id="toc-entry-5">Known issues / Roadmap</a></li>
 <li><a class="reference internal" href="#changelog" id="toc-entry-6">Changelog</a><ul>
-<li><a class="reference internal" href="#section-1" id="toc-entry-7">19.0.1.1.0 (2026-10-24)</a></li>
-<li><a class="reference internal" href="#section-2" id="toc-entry-8">19.0.1.0.0 (2026-10-24)</a></li>
+<li><a class="reference internal" href="#section-1" id="toc-entry-7">19.0.1.3.0 (2026-11-04)</a></li>
+<li><a class="reference internal" href="#section-2" id="toc-entry-8">19.0.1.1.0 (2026-10-24)</a></li>
+<li><a class="reference internal" href="#section-3" id="toc-entry-9">19.0.1.0.0 (2026-10-24)</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#bug-tracker" id="toc-entry-9">Bug Tracker</a></li>
-<li><a class="reference internal" href="#credits" id="toc-entry-10">Credits</a><ul>
-<li><a class="reference internal" href="#authors" id="toc-entry-11">Authors</a></li>
-<li><a class="reference internal" href="#contributors" id="toc-entry-12">Contributors</a></li>
-<li><a class="reference internal" href="#maintainers" id="toc-entry-13">Maintainers</a></li>
+<li><a class="reference internal" href="#bug-tracker" id="toc-entry-10">Bug Tracker</a></li>
+<li><a class="reference internal" href="#credits" id="toc-entry-11">Credits</a><ul>
+<li><a class="reference internal" href="#authors" id="toc-entry-12">Authors</a></li>
+<li><a class="reference internal" href="#contributors" id="toc-entry-13">Contributors</a></li>
+<li><a class="reference internal" href="#maintainers" id="toc-entry-14">Maintainers</a></li>
 </ul>
 </li>
 </ul>
@@ -565,6 +566,25 @@ enregistré dans Odoo, à la réception de sa notification.</p>
 <p>Sur une transaction Payplug en attente ou en erreur, le bouton <em>Vérifier
 le statut sur Payplug</em> relit le paiement auprès de Payplug et met la
 transaction à jour (utile si une notification n’a pas pu arriver).</p>
+<p><strong>Référence de paiement Payplug sur la facture</strong></p>
+<p>Les factures clients portent un champ <em>Payplug Payment Reference</em>
+(<tt class="docutils literal">payplug_payment_ref</tt>), dans l’en-tête du formulaire, à l’emplacement
+qu’occupe la référence de paiement sur les factures fournisseur.</p>
+<p>Il sert au rapprochement des virements Payplug. Un virement regroupe
+plusieurs paiements, frais déduits, et son libellé bancaire ne porte
+aucune référence de commande : ni le nom du client ni la référence de la
+commande ne suffisent à retrouver à quelle facture il se rapporte.
+L’identifiant du paiement, lui, est sans ambiguïté.</p>
+<p>Le champ ne concerne que les ventes encaissées <strong>hors d’Odoo</strong>,
+typiquement une boutique PrestaShop dont la synchronisation l’alimente.
+Un paiement pris par Odoo lui-même — page de paiement, lien de paiement
+— garde son identifiant sur sa transaction
+(<tt class="docutils literal">payment.transaction.provider_reference</tt>) et n’a pas besoin de ce
+champ.</p>
+<p>Le contenu est l’identifiant brut tel que la boutique l’a enregistré :
+<tt class="docutils literal">pay_…</tt> pour une carte, <tt class="docutils literal">inst_…</tt> pour un paiement en plusieurs fois.
+Le champ est indexé, et n’est pas repris lors de la duplication d’une
+facture.</p>
 </div>
 <div class="section" id="development">
 <h2><a class="toc-backref" href="#toc-entry-4">Development</a></h2>
@@ -592,6 +612,22 @@ avec deux clients factices : <tt class="docutils literal">fake_client_test</tt> 
 <tt class="docutils literal">fake_client_secret_live</tt> (jetons Live). L’adresse du point de jeton
 se déduit de <tt class="docutils literal">payment_payplug.api_base_url</tt> ; il n’y a rien d’autre à
 régler.</p>
+<p><strong>Rapport comptable.</strong> Le fournisseur sait lire le rapport comptable de
+Payplug, pour un module de rapprochement bancaire par exemple (ce module
+n’écrit rien en comptabilité) :</p>
+<pre class="code python literal-block">
+<span class="n">report</span><span class="p">,</span> <span class="n">csv_text</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">_payplug_fetch_accounting_report</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">)</span>
+</pre>
+<p><tt class="docutils literal">_payplug_create_accounting_report</tt> (<tt class="docutils literal">POST /accounting_reports</tt>)
+demande le fichier, <tt class="docutils literal">_payplug_get_accounting_report</tt> le relit jusqu’à
+ce que son <tt class="docutils literal">temporary_url</tt> soit rempli (quelques secondes ; attente
+bornée à 90 s par défaut), puis <tt class="docutils literal">_payplug_download_accounting_report</tt>
+le télécharge, sans les identifiants de l’API. Le CSV (UTF-8, montants
+en centimes) liste les paiements, remboursements, virements vers la
+banque et factures Payplug prélevées sur le solde, avec les frais
+exacts. Le faux serveur sert le même fichier :
+<tt class="docutils literal"><span class="pre">--accounting-report-csv</span> FICHIER</tt> en mode manuel, ou
+<tt class="docutils literal">state.accounting_report_csv</tt> dans les tests.</p>
 </div>
 <div class="section" id="known-issues-roadmap">
 <h2><a class="toc-backref" href="#toc-entry-5">Known issues / Roadmap</a></h2>
@@ -643,7 +679,17 @@ fournisseur activé, le mode de chaque paiement restant vérifié).</li>
 <div class="section" id="changelog">
 <h2><a class="toc-backref" href="#toc-entry-6">Changelog</a></h2>
 <div class="section" id="section-1">
-<h3><a class="toc-backref" href="#toc-entry-7">19.0.1.1.0 (2026-10-24)</a></h3>
+<h3><a class="toc-backref" href="#toc-entry-7">19.0.1.3.0 (2026-11-04)</a></h3>
+<ul class="simple">
+<li>Lecture du rapport comptable Payplug (<tt class="docutils literal">/accounting_reports</tt>) :
+création, attente du fichier et téléchargement, pour les modules de
+rapprochement bancaire.</li>
+<li>En-tête <tt class="docutils literal"><span class="pre">User-Agent</span></tt> explicite sur toutes les requêtes envoyées à
+Payplug (Cloudflare refuse certaines signatures de client génériques).</li>
+</ul>
+</div>
+<div class="section" id="section-2">
+<h3><a class="toc-backref" href="#toc-entry-8">19.0.1.1.0 (2026-10-24)</a></h3>
 <ul class="simple">
 <li>Authentification OAuth2 (<em>client credentials</em>) au choix, à côté de la
 clé API : jetons d’accès de 5 minutes gardés en mémoire et renouvelés
@@ -652,8 +698,8 @@ Payplug refuse le jeton, contrôle de l’environnement (Test ou Live) du
 jeton.</li>
 </ul>
 </div>
-<div class="section" id="section-2">
-<h3><a class="toc-backref" href="#toc-entry-8">19.0.1.0.0 (2026-10-24)</a></h3>
+<div class="section" id="section-3">
+<h3><a class="toc-backref" href="#toc-entry-9">19.0.1.0.0 (2026-10-24)</a></h3>
 <ul class="simple">
 <li>Première version : paiement par la page hébergée Payplug,
 notifications, remboursements totaux et partiels, paiement des
@@ -662,7 +708,7 @@ factures.</li>
 </div>
 </div>
 <div class="section" id="bug-tracker">
-<h2><a class="toc-backref" href="#toc-entry-9">Bug Tracker</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-10">Bug Tracker</a></h2>
 <p>Bugs are tracked on <a class="reference external" href="https://github.com/sbinfo67/odoo-payplug/issues">GitHub Issues</a>.
 In case of trouble, please check there if your issue has already been reported.
 If you spotted it first, help us to smash it by providing a detailed and welcomed
@@ -670,21 +716,21 @@ If you spotted it first, help us to smash it by providing a detailed and welcome
 <p>Do not contact contributors directly about support or help with technical issues.</p>
 </div>
 <div class="section" id="credits">
-<h2><a class="toc-backref" href="#toc-entry-10">Credits</a></h2>
+<h2><a class="toc-backref" href="#toc-entry-11">Credits</a></h2>
 <div class="section" id="authors">
-<h3><a class="toc-backref" href="#toc-entry-11">Authors</a></h3>
+<h3><a class="toc-backref" href="#toc-entry-12">Authors</a></h3>
 <ul class="simple">
 <li>Sébastien Berger (sbinfo67)</li>
 </ul>
 </div>
 <div class="section" id="contributors">
-<h3><a class="toc-backref" href="#toc-entry-12">Contributors</a></h3>
+<h3><a class="toc-backref" href="#toc-entry-13">Contributors</a></h3>
 <ul class="simple">
 <li>Sébastien Berger &lt;<a class="reference external" href="mailto:contact&#64;sbinfo.pro">contact&#64;sbinfo.pro</a>&gt;</li>
 </ul>
 </div>
 <div class="section" id="maintainers">
-<h3><a class="toc-backref" href="#toc-entry-13">Maintainers</a></h3>
+<h3><a class="toc-backref" href="#toc-entry-14">Maintainers</a></h3>
 <p>Current maintainer:</p>
 <p><a class="reference external image-reference" href="https://github.com/sbinfo67"><img alt="sbinfo67" src="https://github.com/sbinfo67.png?size=40px" /></a></p>
 <p>This module is part of the <a class="reference external" href="https://github.com/sbinfo67/odoo-payplug/tree/19.0/payment_payplug">sbinfo67/odoo-payplug</a> project on GitHub.</p>

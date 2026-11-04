@@ -23,6 +23,19 @@ TOKEN_REQUEST_TIMEOUT = 10
 # Version of the API used by this module, sent in the `PayPlug-Version` header.
 API_VERSION = "2019-08-06"
 
+# Product token of the `User-Agent` header sent with every request. The API sits behind
+# Cloudflare, which refuses some generic client signatures (HTTP 403, error 1010): the
+# requests name the module explicitly.
+USER_AGENT = "Odoo-payment_payplug"
+
+# Accounting reports (`/accounting_reports`): Payplug generates the file asynchronously,
+# in a few seconds; the report is read again every POLL_INTERVAL seconds until its
+# `temporary_url` is set, for at most MAX_WAIT seconds. The file is then downloaded from
+# that URL (a temporary storage link, valid 24 hours), without the API credentials.
+ACCOUNTING_REPORT_POLL_INTERVAL = 2
+ACCOUNTING_REPORT_MAX_WAIT = 90
+ACCOUNTING_REPORT_DOWNLOAD_TIMEOUT = 60
+
 # Prefixes of the secret keys depending on the environment.
 SECRET_KEY_PREFIX_TEST = "sk_test_"
 SECRET_KEY_PREFIX_LIVE = "sk_live_"
@@ -89,4 +102,5 @@ SENSITIVE_KEYS = {
     "access_token",
     "payplug_secret_key",
     "payplug_client_secret",
+    "temporary_url",
 }

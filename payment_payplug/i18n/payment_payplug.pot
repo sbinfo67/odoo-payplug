@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 19.0-20260817\n"
+"Project-Id-Version: Odoo Server 19.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-24 16:51+0000\n"
-"PO-Revision-Date: 2026-10-24 16:51+0000\n"
+"POT-Creation-Date: 2026-11-04 22:12+0000\n"
+"PO-Revision-Date: 2026-11-04 22:12+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -55,12 +55,25 @@ msgstr ""
 #. module: payment_payplug
 #. odoo-python
 #: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "Could not download the Payplug accounting report (HTTP %s)."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "Could not download the Payplug accounting report."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
 msgid ""
 "Could not reach the Payplug authorization server to get an access token. "
 "Please try again later."
 msgstr ""
 
 #. module: payment_payplug
+#: model:ir.model.fields,field_description:payment_payplug.field_account_move__display_name
 #: model:ir.model.fields,field_description:payment_payplug.field_payment_provider__display_name
 #: model:ir.model.fields,field_description:payment_payplug.field_payment_transaction__display_name
 msgid "Display Name"
@@ -72,9 +85,21 @@ msgid "Fetch the status of this transaction from Payplug and update it."
 msgstr ""
 
 #. module: payment_payplug
+#: model:ir.model.fields,field_description:payment_payplug.field_account_move__id
 #: model:ir.model.fields,field_description:payment_payplug.field_payment_provider__id
 #: model:ir.model.fields,field_description:payment_payplug.field_payment_transaction__id
 msgid "ID"
+msgstr ""
+
+#. module: payment_payplug
+#: model:ir.model.fields,help:payment_payplug.field_account_bank_statement_line__payplug_payment_ref
+#: model:ir.model.fields,help:payment_payplug.field_account_move__payplug_payment_ref
+msgid ""
+"Identifier of the Payplug payment that settled this invoice, as the shop "
+"recorded it: 'pay_...' for a card payment, 'inst_...' for an instalment "
+"plan. Left empty for an order that did not go through the shop's Payplug "
+"module — a payment link issued from Odoo keeps its identifier on the payment"
+" transaction instead."
 msgstr ""
 
 #. module: payment_payplug
@@ -90,6 +115,17 @@ msgstr ""
 #: code:addons/payment_payplug/models/payment_provider.py:0
 msgid ""
 "In test mode, the Payplug secret key must be a test key (starting with %s)."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "Invalid Payplug accounting report identifier."
+msgstr ""
+
+#. module: payment_payplug
+#: model:ir.model,name:payment_payplug.model_account_move
+msgid "Journal Entry"
 msgstr ""
 
 #. module: payment_payplug
@@ -126,6 +162,12 @@ msgstr ""
 #. module: payment_payplug
 #: model:ir.model.fields,field_description:payment_payplug.field_payment_provider__payplug_client_secret
 msgid "Payplug Client Secret"
+msgstr ""
+
+#. module: payment_payplug
+#: model:ir.model.fields,field_description:payment_payplug.field_account_bank_statement_line__payplug_payment_ref
+#: model:ir.model.fields,field_description:payment_payplug.field_account_move__payplug_payment_ref
+msgid "Payplug Payment Reference"
 msgstr ""
 
 #. module: payment_payplug
@@ -174,6 +216,12 @@ msgstr ""
 
 #. module: payment_payplug
 #. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "Payplug returned an invalid accounting report."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
 #: code:addons/payment_payplug/models/payment_transaction.py:0
 msgid "Payplug returned an object that is not a payment."
 msgstr ""
@@ -187,6 +235,26 @@ msgstr ""
 #. odoo-python
 #: code:addons/payment_payplug/models/payment_provider.py:0
 msgid "The Payplug OAuth2 client ID and secret are not set."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid ""
+"The Payplug accounting report %(report)s is still not ready after "
+"%(seconds)s seconds. Please try again in a few minutes."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "The Payplug accounting report has no valid download link."
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "The Payplug accounting report is not valid UTF-8 text."
 msgstr ""
 
 #. module: payment_payplug
@@ -260,6 +328,12 @@ msgstr ""
 #. odoo-python
 #: code:addons/payment_payplug/models/payment_transaction.py:0
 msgid "The payment was refused by Payplug (%(code)s): %(message)s"
+msgstr ""
+
+#. module: payment_payplug
+#. odoo-python
+#: code:addons/payment_payplug/models/payment_provider.py:0
+msgid "The period of a Payplug accounting report is invalid."
 msgstr ""
 
 #. module: payment_payplug

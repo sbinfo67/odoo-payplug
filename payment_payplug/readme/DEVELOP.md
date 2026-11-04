@@ -20,3 +20,19 @@ Pour essayer la méthode OAuth2, le faux serveur répond aussi sur `POST /oauth2
 `fake_client_secret_test` (jetons de test) et `fake_client_live` /
 `fake_client_secret_live` (jetons Live). L'adresse du point de jeton se déduit de
 `payment_payplug.api_base_url` ; il n'y a rien d'autre à régler.
+
+**Rapport comptable.** Le fournisseur sait lire le rapport comptable de Payplug, pour un
+module de rapprochement bancaire par exemple (ce module n'écrit rien en comptabilité) :
+
+``` python
+report, csv_text = provider._payplug_fetch_accounting_report(start_date, end_date)
+```
+
+`_payplug_create_accounting_report` (`POST /accounting_reports`) demande le fichier,
+`_payplug_get_accounting_report` le relit jusqu'à ce que son `temporary_url` soit rempli
+(quelques secondes ; attente bornée à 90 s par défaut), puis
+`_payplug_download_accounting_report` le télécharge, sans les identifiants de l'API.
+Le CSV (UTF-8, montants en centimes) liste les paiements, remboursements, virements vers
+la banque et factures Payplug prélevées sur le solde, avec les frais exacts. Le faux
+serveur sert le même fichier : `--accounting-report-csv FICHIER` en mode manuel, ou
+`state.accounting_report_csv` dans les tests.
