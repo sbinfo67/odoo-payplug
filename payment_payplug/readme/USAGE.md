@@ -31,8 +31,8 @@ notification n'a pas pu arriver).
 **Référence de paiement Payplug sur la facture**
 
 Les factures clients portent un champ *Payplug Payment Reference*
-(`payplug_payment_ref`), à côté de la référence de paiement, dans l'onglet des
-informations complémentaires.
+(`payplug_payment_ref`), dans l'en-tête du formulaire, à l'emplacement qu'occupe la
+référence de paiement sur les factures fournisseur.
 
 Il sert au rapprochement des virements Payplug. Un virement regroupe plusieurs
 paiements, frais déduits, et son libellé bancaire ne porte aucune référence de
